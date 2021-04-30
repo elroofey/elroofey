@@ -1,0 +1,290 @@
+<html>
+
+<head>
+
+    <title>Basic Hefa - Leaflet</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+        integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+        crossorigin="" />
+
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./dist/leaflet.awesome-markers.css">
+    <link rel="stylesheet" href="https://ppete2.github.io/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.css" />
+    <!--this is new-->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+        integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+        crossorigin=""></script>
+    <script src="./dist/leaflet.awesome-markers.js"></script>
+    <script src="https://ppete2.github.io/Leaflet.PolylineMeasure/Leaflet.PolylineMeasure.js"></script>
+    <!--this is new-->
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #map {
+            width: 100%;
+            height: 96vh;
+        }
+    </style>
+
+
+</head>
+
+<body>
+
+    <div class="btn-group">
+        <button type="button" id="all" class="btn btn-info">All</button>
+        <button type="button" id="chemist" class="btn btn-success">Chemists</button>
+        <button type="button" id="hospital" class="btn btn-primary">Hospitals</button>
+        <button type="button" id="clinic" class="btn btn-danger">Clinics</button>
+    </div>
+    <div id='map'></div>
+
+    <script src="kaduna.js" type="text/javascript"></script>
+    <script src="markers.js" type="text/javascript"></script>
+    <script>
+        var group = L.layerGroup();
+
+        var mbAttr = 'Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ' +
+            'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            mbUrl = 'https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+
+        var light = L.tileLayer(mbUrl, { id: 'mapbox/light-v10', tileSize: 512, zoomOffset: -1, attribution: mbAttr }),
+            dark = L.tileLayer(mbUrl, { id: 'mapbox/dark-v10', tileSize: 512, zoomOffset: -1, attribution: mbAttr }),
+            streets = L.tileLayer(mbUrl, { id: 'mapbox/streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr }),
+            satellite = L.tileLayer(mbUrl, { id: 'mapbox/satellite-v9', tileSize: 512, zoomOffset: -1, attribution: mbAttr }),
+            satelliteStreets = L.tileLayer(mbUrl, { id: 'mapbox/satellite-streets-v11', tileSize: 512, zoomOffset: -1, attribution: mbAttr });
+
+        var map = L.map('map', {
+            center: [10.51178, 7.427444],
+            zoom: 8,
+            layers: [light, dark, streets, satellite, satelliteStreets]
+        });
+
+        var baseLayers = {
+            "Light Map": light,
+            "Dark Map": dark,
+            "Open Streets Map": streets,
+            "Open Satellite Map": satellite,
+            "Open Satellite Streets Map": satelliteStreets
+        };
+
+        var overlays = {
+            "Points View": group
+        };
+
+
+        L.control.layers(baseLayers, overlays, { collapsed: false }).addTo(map);
+        L.control.scale().addTo(map);
+
+        // var popup = L.popup();
+        // function onMapClick(e) {
+        //     popup
+        //         .setLatLng(e.latlng)
+        //         .setContent("You clicked the map at " + e.latlng.toString())
+        //         .openOn(map);
+        // }
+
+        // map.on('click', onMapClick);
+
+        L.geoJson(statesData).addTo(map);
+
+        // L.geoJson(markersData).addTo(map);
+
+        var chemistIcon = L.AwesomeMarkers.icon({
+            prefix: 'fa', //font awesome rather than bootstrap
+            markerColor: 'green', // see colors above
+            icon: 'building' //http://fortawesome.github.io/Font-Awesome/icons/
+        });
+
+        var hospitalIcon = L.AwesomeMarkers.icon({
+            prefix: 'fa', //font awesome rather than bootstrap
+            markerColor: 'red', // see colors above
+            icon: 'h-square' //http://fortawesome.github.io/Font-Awesome/icons/
+        });
+
+        var clinicIcon = L.AwesomeMarkers.icon({
+            prefix: 'fa', //font awesome rather than bootstrap
+            markerColor: 'blue', // see colors above
+            icon: 'copyright' //http://fortawesome.github.io/Font-Awesome/icons/
+        });
+
+        //Circle Example
+        // var chemist = L.geoJson(markersData, {
+        //     filter: function (feature, layer) {
+        //         return feature.properties.BusType == "Chemist";
+        //     },
+        //     pointToLayer: function (feature, latlng) {
+        //         return L.circle(latlng, 2500)
+        //             .on('mouseover', function () {
+        //                 this.bindPopup(feature.properties.Name).openPopup();
+        //             });
+        //     }
+        // }).addTo(group);
+
+
+        var chemist = L.geoJson(markersData, {
+            filter: function (feature, layer) {
+                return feature.properties.BusType == "Chemist";
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: chemistIcon
+                })
+                    .on('mouseover', function () {
+                        this.bindPopup(feature.properties.Name).openPopup();
+                    });
+            }
+        }).addTo(group);
+
+        var hospital = L.geoJson(markersData, {
+            filter: function (feature, layer) {
+                return feature.properties.BusType == "Hospital";
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: hospitalIcon
+                }).on('mouseover', function () {
+                    this.bindPopup(feature.properties.Name).openPopup();
+                });
+            }
+        }).addTo(group);
+
+        var clinic = L.geoJson(markersData, {
+            filter: function (feature, layer) {
+                return feature.properties.BusType == "Clinic";
+            },
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, {
+                    icon: clinicIcon
+                }).on('mouseover', function () {
+                    this.bindPopup(feature.properties.Name).openPopup();
+                });
+            }
+        }).addTo(group);
+
+        chemist.addTo(map)
+        hospital.addTo(map)
+        clinic.addTo(map)
+
+        const allButton = document.getElementById("all")
+        const chemistButton = document.getElementById("chemist")
+        const hospitalButton = document.getElementById("hospital")
+        const clinicButton = document.getElementById("clinic")
+
+        allButton.addEventListener('click', () => {
+            map.addLayer(chemist)
+            map.addLayer(hospital)
+            map.addLayer(clinic)
+        })
+
+        chemistButton.addEventListener('click', () => {
+            map.addLayer(chemist)
+            map.removeLayer(hospital)
+            map.removeLayer(clinic)
+        })
+
+        hospitalButton.addEventListener('click', () => {
+            map.addLayer(hospital)
+            map.removeLayer(chemist)
+            map.removeLayer(clinic)
+        })
+
+        clinicButton.addEventListener('click', () => {
+            map.addLayer(clinic)
+            map.removeLayer(chemist)
+            map.removeLayer(hospital)
+        })
+
+        // Leaflet.PolylineMeasure
+
+        const options = {
+            position: 'topleft',            // Position to show the control. Values: 'topright', 'topleft', 'bottomright', 'bottomleft'
+            unit: 'metres',                 // Show imperial or metric distances. Values: 'metres', 'landmiles', 'nauticalmiles'
+            clearMeasurementsOnStop: true,  // Clear all the measurements when the control is unselected
+            showBearings: false,            // Whether bearings are displayed within the tooltips
+            bearingTextIn: 'In',             // language dependend label for inbound bearings
+            bearingTextOut: 'Out',          // language dependend label for outbound bearings
+            tooltipTextFinish: 'Click to <b>finish line</b><br>',
+            tooltipTextDelete: 'Press SHIFT-key and click to <b>delete point</b>',
+            tooltipTextMove: 'Click and drag to <b>move point</b><br>',
+            tooltipTextResume: '<br>Press CTRL-key and click to <b>resume line</b>',
+            tooltipTextAdd: 'Press CTRL-key and click to <b>add point</b>',
+            // language dependend labels for point's tooltips
+            measureControlTitleOn: 'Turn on PolylineMeasure',   // Title for the control going to be switched on
+            measureControlTitleOff: 'Turn off PolylineMeasure', // Title for the control going to be switched off
+            measureControlLabel: '&#8614;', // Label of the Measure control (maybe a unicode symbol)
+            measureControlClasses: [],      // Classes to apply to the Measure control
+            showClearControl: false,        // Show a control to clear all the measurements
+            clearControlTitle: 'Clear Measurements', // Title text to show on the clear measurements control button
+            clearControlLabel: '&times',    // Label of the Clear control (maybe a unicode symbol)
+            clearControlClasses: [],        // Classes to apply to clear control button
+            showUnitControl: false,         // Show a control to change the units of measurements
+            distanceShowSameUnit: false,    // Keep same unit in tooltips in case of distance less then 1 km/mi/nm
+            unitControlTitle: {             // Title texts to show on the Unit Control button
+                text: 'Change Units',
+                metres: 'metres',
+                landmiles: 'land miles',
+                nauticalmiles: 'nautical miles'
+            },
+            unitControlLabel: {             // Unit symbols to show in the Unit Control button and measurement labels
+                metres: 'm',
+                kilometres: 'km',
+                feet: 'ft',
+                landmiles: 'mi',
+                nauticalmiles: 'nm'
+            },
+            tempLine: {                     // Styling settings for the temporary dashed line
+                color: '#00f',              // Dashed line color
+                weight: 2                   // Dashed line weight
+            },
+            fixedLine: {                    // Styling for the solid line
+                color: '#006',              // Solid line color
+                weight: 2                   // Solid line weight
+            },
+            startCircle: {                  // Style settings for circle marker indicating the starting point of the polyline
+                color: '#000',              // Color of the border of the circle
+                weight: 1,                  // Weight of the circle
+                fillColor: '#0f0',          // Fill color of the circle
+                fillOpacity: 1,             // Fill opacity of the circle
+                radius: 3                   // Radius of the circle
+            },
+            intermedCircle: {               // Style settings for all circle markers between startCircle and endCircle
+                color: '#000',              // Color of the border of the circle
+                weight: 1,                  // Weight of the circle
+                fillColor: '#ff0',          // Fill color of the circle
+                fillOpacity: 1,             // Fill opacity of the circle
+                radius: 3                   // Radius of the circle
+            },
+            currentCircle: {                // Style settings for circle marker indicating the latest point of the polyline during drawing a line
+                color: '#000',              // Color of the border of the circle
+                weight: 1,                  // Weight of the circle
+                fillColor: '#f0f',          // Fill color of the circle
+                fillOpacity: 1,             // Fill opacity of the circle
+                radius: 3                   // Radius of the circle
+            },
+            endCircle: {                    // Style settings for circle marker indicating the last point of the polyline
+                color: '#000',              // Color of the border of the circle
+                weight: 1,                  // Weight of the circle
+                fillColor: '#f00',          // Fill color of the circle
+                fillOpacity: 1,             // Fill opacity of the circle
+                radius: 3                   // Radius of the circle
+            },
+        };
+        L.control.polylineMeasure(options).addTo(map);
+
+    </script>
+
+</body>
+
+</html>
